@@ -45,11 +45,28 @@ output_res=$(pactl list sinks | grep -e "Mute" -e "Volume: front-left" | sed -n 
       # '3,4p' : get 3rd line; p, print matched line;
     # xargs : Put the 2 lines into 1 line
 
+# Note about (bluetooth) headsets connected/disconnected:
+    # In my case, if my bluetooth is not operating, then only 2 lines will output; which seems to be the hardware settings? It's Sink#2, "Built-in Auidio Analog Stereo";
+    # And this device always reads 100% volume; interstingly, when I have my bluetooth disconnected, the Mate volume control also returns to 100%;
+    #  But it's not the regular bluetooth device I use; who knows, with a different bluetooth device, the setting again might be different???
+    # So the above, when bluetooth headset is disconnected, lines 3,4 will output a blank line; that will then give the same result as when the system is muted; do I want that?
+    # Tried out a different bluetooth headset, and while the sink number is different, it does appear as lines 3, 4; so this code will work with other bluetooth devices, it appears;
+    # ANd each device has its own volume level
+    # I don't know what would happen if I had both a bluetooth and wired headphone at same time? Or just wired?
+
+
+# So when bluetooth is disconnected, I'll show this emoji:
+if [[ -z "$output_res" ]]; then
+
+    vol_res=👻
+
+
+# If bluetooth connected, check for mute status; if not mute, then show volume:
 # Here, bash lint telling me to use grep -q command instead; but have to leave out brackets;
 # Not sure when or when not to use brackets?? The brackets is basically a "test" command;
 # It's saying, "test $a = $b" or [ $a = $b ]; If no need to "test", then don't need brackets?
 # if [[ $(echo $output_res | grep -s 'Mute: no') ]]; then
-if echo "$output_res" | grep -q 'Mute: no'; then
+elif echo -n "$output_res" | grep -q 'Mute: no'; then
     # -q : Quiet :
       # don't write to standard output; exit with zero status if successful
       # So this basically will give a return status of zero, which the if statement reads as true;
@@ -64,15 +81,18 @@ if echo "$output_res" | grep -q 'Mute: no'; then
     # Mute: no Volume: front-left: 62830 / 96% / -1.10 dB, front-right: 62830 / 96% / -1.10 dB
     vol_res=$(echo "$output_res" | awk '{print $7}')
 
-    # Then echo our result:
-    echo "¦    $vol_res"
 
+# If mute, thenshow this emoji:
 else
     # The sound is muted; show donut;
-    echo "¦    🍩"
+    vol_res=🍩
 fi
 
 
+# Echo our formatted emoji/string
+echo -n "¦    $vol_res"
+  # -n : avoid newline; not necessary, but just put here;
+  # Could also use printf command; by default, no new line;
 
 # -----------------------------------------
 
@@ -80,6 +100,6 @@ fi
 # Various icons to use, emojis and nerdfons:
 # 󰗅  󱄡   󰓀   󱟛 🔈 🔉  🔊 󱡏 󱡒  󰟅
 #  󰎆   󰝚 󰎄 󱍙 󰃂 󰽭 󰽻 🤖 📻 📣 💬 💭 🎻 🎸 🪕 🥁
-# 🎹  🍩 🌋 📻
+# 🎹  🍩 🌋 📻 👻 💀 ☠️
 
 
