@@ -8,14 +8,9 @@
 # Call pactl; parse the volume level; 
 # See notes;
 
-# Logic:
-# blutooth connected
-  # get 4 lines back
-  # get volume of bluetooth
-# bluetooth not connected
-  # Get 2 lines back
-  # Get volume of system
+#----------------------------------------------
 
+# Global variables
 pactl_sinks=''
 bluetooth_connected=false
 volume_line=''
@@ -24,7 +19,6 @@ volume_level=''
 print_result=''
 which_sink='system'
 
-# output_res=$(pactl list sinks | grep -e "Mute" -e "Volume: front-left" | sed -n '3,4p' | xargs)
 
 # Print pactl sinks; parse output;
 function get_pactl_sinks() {
@@ -36,6 +30,8 @@ function is_bluetooth_connected() {
 
     local lines
     lines=$(echo "$pactl_sinks" | wc -l)
+    # wc -l : line count;
+    # if 4, then bluetooth; if 2, then system
 
     if [[ "$lines" == "4" ]]; then
         bluetooth_connected=true
@@ -43,10 +39,14 @@ function is_bluetooth_connected() {
 
 }
 
+# Check if vol is muted
 function check_muted() {
     if echo -n "$pactl_sinks" | grep -q 'Mute: yes'; then
         is_muted=true
     fi
+    # -q : Quiet
+      # don't write to standard output; exit with zero status if successful
+      # So this basically will give a return status of zero, which the if statement reads as true;
 }
 
 function parse_vol() {
@@ -63,6 +63,7 @@ function parse_vol() {
         volume_level=$(echo "$volume_line" | awk '{print $7}')
         which_sink="system"
     fi
+    # See notes below about sed command;
 }
 
 function format_print_vol() {
@@ -78,67 +79,29 @@ function format_print_vol() {
     else
         print_result+="$volume_level"
     fi
-
-
 }
 
 function do_print_vol() {
     echo -n "¦    $print_result"
 }
 
+# Logic:
+# blutooth connected
+  # get 4 lines back
+# bluetooth not connected
+  # Get 2 lines back
+# Is muted?
+# Get volume of system/bluetooth
+# Format and print output
 
 get_pactl_sinks
 is_bluetooth_connected
 format_print_vol
 check_muted
-# if [[ $is_muted == false ]]; then parse_vol; fi
 if ! $is_muted; then parse_vol; fi
 format_print_vol
 do_print_vol
 
-
-exit 0
-
-
-
-# # So when bluetooth is disconnected ($output_res variable is null), I'll show this emoji:
-if [[ -z "$output_res" ]]; then
-
-    vol_res=👻
-
-
-# If bluetooth connected, check for mute status; if not mute, then show volume:
-# Here, bash lint telling me to use grep -q command instead; but have to leave out brackets;
-# Not sure when or when not to use brackets?? The brackets is basically a "test" command;
-# It's saying, "test $a = $b" or [ $a = $b ]; If no need to "test", then don't need brackets?
-# elif [[ $(echo "$output_res" | grep -s 'Mute: no') ]]; then
-elif echo -n "$output_res" | grep -q 'Mute: no'; then
-    # -q : Quiet :
-      # don't write to standard output; exit with zero status if successful
-      # So this basically will give a return status of zero, which the if statement reads as true;
-      # if 'Mute: no' is not found, then I think the return status should be non-zero;
-    # -s, --no-messages :
-      # suppress errror messages about nonexistent or unreadble fiels;
-      # If match not found, then will be mute;
-      # Used this with the previous syntax;
-      # If I had gone with the -s option, then if match found, then will print, 'Must: no';
-
-    # Output is this; so get the 7th string;
-    # Mute: no Volume: front-left: 62830 / 96% / -1.10 dB, front-right: 62830 / 96% / -1.10 dB
-    vol_res=$(echo "$output_res" | awk '{print $7}')
-
-
-# If mute, then show this emoji:
-else
-    # The sound is muted; show donut;
-    vol_res=🍩
-fi
-
-
-# Echo our formatted emoji/string
-echo -n "¦    $vol_res"
-  # -n : avoid newline; not necessary, but just put here;
-  # Could also use printf command; by default, no new line;
 
 # -----------------------------------------
 
