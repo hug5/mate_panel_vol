@@ -173,7 +173,11 @@ do_print_vol
   #---------------------------
 
   # // 2024-03-19 Tue 22:03
-  # Notes:
+  # Major change;
+  # Created functions to organize
+  # Now outputing volume for both system and bluetooth
+  # Display whether it's system or bluetooth volume;
+  # So now will always show some kind of volume reading; before had nothing when bluetooth disconnected;
   #
   # pactl list sinks gives output like this, depending on whether you have bluetooth connected or not; the non-bluetooth volume seems to be always displayed;
 
